@@ -616,6 +616,8 @@ class TrainerSettings(ExportableSettings):
     default_override: ClassVar[Optional["TrainerSettings"]] = None
     trainer_type: str = "ppo"
     hyperparameters: HyperparamSettings = attr.ib()
+    #hyperparameters: PPOSettings = attr.ib(factory=PPOSettings)  # ハイパーパラメータの設定
+    #hyperparameters: SACSettings = attr.ib(factory=SACSettings)
     checkpoint_interval: int = attr.ib()
 
     @hyperparameters.default

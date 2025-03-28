@@ -20,6 +20,9 @@ from mlagents.trainers.settings import TrainerSettings
 
 from mlagents.trainers.torch_entities.networks import SimpleActor
 
+from mlagents.trainers.simba.networks import SimBaActor
+
+
 logger = get_logger(__name__)
 
 BUFFER_TRUNCATE_PERCENT = 0.8
@@ -155,8 +158,19 @@ class SACTrainer(OffPolicyTrainer):
         :param behavior_spec: specifications for policy construction
         :return policy
         """
-        actor_cls = SimpleActor
-        actor_kwargs = {"conditional_sigma": True, "tanh_squash": True}
+        # actor_cls = SimpleActor
+        # actor_kwargs = {"conditional_sigma": True, "tanh_squash": True}
+        actor_cls = SimBaActor
+        actor_kwargs = {
+            "conditional_sigma": True,
+            "tanh_squash": True,
+            "hidden_size": self.trainer_settings.network_settings.hidden_units,
+            "num_blocks": 3  # SimBaの残差ブロック数を指定
+        }
+        # actor_kwargs = {"input_size": behavior_spec.observation_specs[0].shape[0],
+        #                 "action_size": behavior_spec.action_spec.continuous_size,
+        #                 "hidden_size": 256}  # 適切なサイズを指定
+
 
         policy = TorchPolicy(
             self.seed,
@@ -167,6 +181,23 @@ class SACTrainer(OffPolicyTrainer):
         )
         self.maybe_load_replay_buffer()
         return policy
+        # policy = TorchPolicy(
+        #     self.seed,
+        #     behavior_spec,
+        #     self.trainer_settings.network_settings,
+        #     actor_cls=SimBaNetwork,
+        #     actor_kwargs={
+        #         "input_size": sum(obs.shape[0] for obs in behavior_spec.observation_specs),
+        #         "output_size": behavior_spec.action_spec.continuous_size,
+        #         "hidden_size": self.trainer_settings.network_settings.hidden_units,
+        #         "use_rs_norm": True,
+        #         "use_residual_blocks": True,
+        #         "post_layer_norm": True,
+        #     },
+        # )
+        
+        # self.maybe_load_replay_buffer()
+        # return policy
 
     def get_policy(self, name_behavior_id: str) -> Policy:
         """

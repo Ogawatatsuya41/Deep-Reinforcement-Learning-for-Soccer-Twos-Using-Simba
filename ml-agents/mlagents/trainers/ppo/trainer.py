@@ -21,6 +21,12 @@ from mlagents.trainers.settings import TrainerSettings
 
 from mlagents.trainers.torch_entities.networks import SimpleActor, SharedActorCritic
 
+# from mlagents.trainers.simba.networks import SimBaNetwork
+# from mlagents.trainers.simba.normalization import RSNorm
+# from mlagents.trainers.simba.blocks import ResidualFeedforwardBlock
+
+from mlagents.trainers.ppo.simba_modules import SimBaActor
+
 logger = get_logger(__name__)
 
 TRAINER_NAME = "ppo"
@@ -139,6 +145,17 @@ class PPOTrainer(OnPolicyTrainer):
                 gamma=self.optimizer.reward_signals[name].gamma,
                 lambd=self.hyperparameters.lambd,
             )
+
+            # normalized_rewards = RSNorm.apply(local_rewards)
+            # normalized_values = RSNorm.apply(local_value_estimates)
+            # local_advantage = get_gae(
+            #     rewards=normalized_rewards,
+            #     value_estimates=normalized_values,
+            #     value_next=bootstrap_value,
+            #     gamma=self.optimizer.reward_signals[name].gamma,
+            #     lambd=self.hyperparameters.lambd,
+            # )
+
             local_return = local_advantage + local_value_estimates
             # This is later use as target for the different value estimates
             agent_buffer_trajectory[RewardSignalUtil.returns_key(name)].set(
@@ -195,8 +212,16 @@ class PPOTrainer(OnPolicyTrainer):
             self.seed,
             behavior_spec,
             self.trainer_settings.network_settings,
-            actor_cls,
-            actor_kwargs,
+            # actor_cls,
+            # actor_kwargs,
+            actor_cls=SimBaActor,
+            actor_kwargs={"hidden_size": 256},
+            # actor_cls=SimBaNetwork,  # Replace SimpleActor with SimBaNetwork
+            # actor_kwargs={
+            #     "use_rs_norm": True,
+            #     "use_residual_blocks": True,
+            #     "post_layer_norm": True,
+            # },
         )
         return policy
 

@@ -19,6 +19,12 @@ from mlagents.trainers.torch_entities.action_log_probs import ActionLogProbs
 from mlagents.trainers.torch_entities.utils import ModelUtils
 from mlagents.trainers.trajectory import ObsUtil
 
+# from mlagents.trainers.simba.networks import SimBaNetwork
+# from mlagents.trainers.simba.normalization import RSNorm
+# from mlagents.trainers.simba.blocks import ResidualFeedforwardBlock
+
+# from mlagents.trainers.ppo.simba_modules import RSNorm, ResidualFeedforwardBlock
+
 
 @attr.s(auto_attribs=True)
 class PPOSettings(OnPolicyHyperparamSettings):
@@ -30,6 +36,10 @@ class PPOSettings(OnPolicyHyperparamSettings):
     learning_rate_schedule: ScheduleType = ScheduleType.LINEAR
     beta_schedule: ScheduleType = ScheduleType.LINEAR
     epsilon_schedule: ScheduleType = ScheduleType.LINEAR
+    # # SimBa関連の設定項目を追加
+    # use_rs_norm: bool = False           # RSNormを使用するか
+    # use_residual_blocks: bool = False   # 残差ブロックを使用するか
+    # post_layer_norm: bool = False       # Post-Layer Normalizationを使用するか
 
 
 class TorchPPOOptimizer(TorchOptimizer):
@@ -50,6 +60,36 @@ class TorchPPOOptimizer(TorchOptimizer):
         self.hyperparameters: PPOSettings = cast(
             PPOSettings, trainer_settings.hyperparameters
         )
+
+        
+        # # Actor（ポリシーネットワーク）のパラメータを取得
+        # params = list(self.policy.actor.parameters())
+
+        # # SimBaNetworkをCritic（価値関数ネットワーク）として設定
+        # self._critic = SimBaNetwork(
+        #     reward_signal_names,                      # 報酬シグナル名
+        #     policy.behavior_spec.observation_specs,   # 観測仕様
+        #     network_settings=trainer_settings.network_settings,  # ネットワーク設定
+        #     # use_rs_norm=True,                         # RSNormを有効化
+        #     # use_residual_blocks=True,                 # 残差ブロックを有効化
+        #     # post_layer_norm=True                      # 出力正規化を有効化
+        #     use_rs_norm=self.hyperparameters.use_rs_norm,
+        #     use_residual_blocks=self.hyperparameters.use_residual_blocks,
+        #     post_layer_norm=self.hyperparameters.post_layer_norm,
+        # )
+
+        # # Criticネットワークをデフォルトデバイス（例: GPUまたはCPU）に配置
+        # self._critic.to(default_device())
+
+        # # Criticのパラメータを追加
+        # params += list(self._critic.parameters())
+
+        # # 最適化アルゴリズムを設定（ActorとCriticのパラメータを対象）
+        # self.optimizer = torch.optim.Adam(
+        #     params,                                   # 最適化対象パラメータ
+        #     lr=self.trainer_settings.hyperparameters.learning_rate  # 学習率
+        # )
+
 
         params = list(self.policy.actor.parameters())
         if self.hyperparameters.shared_critic:

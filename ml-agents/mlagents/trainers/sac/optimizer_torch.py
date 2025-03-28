@@ -20,6 +20,10 @@ from mlagents.trainers.settings import TrainerSettings, OffPolicyHyperparamSetti
 from contextlib import ExitStack
 from mlagents.trainers.trajectory import ObsUtil
 
+# from mlagents.trainers.simba.networks import SimBaNetwork
+from mlagents.trainers.simba.networks import SimBaCritic  # SimBaCriticを追加
+
+
 EPSILON = 1e-6  # Small value to avoid divide by zero
 
 logger = get_logger(__name__)
@@ -27,14 +31,21 @@ logger = get_logger(__name__)
 
 @attr.s(auto_attribs=True)
 class SACSettings(OffPolicyHyperparamSettings):
-    batch_size: int = 128
-    buffer_size: int = 50000
+    #batch_size: int = 128
+    batch_size: int = 512
+    #buffer_size: int = 50000
+    buffer_size: int = 1000000
     buffer_init_steps: int = 0
     tau: float = 0.005
     steps_per_update: float = 1
     save_replay_buffer: bool = False
-    init_entcoef: float = 1.0
+    #init_entcoef: float = 1.0
+    init_entcoef: float = 0.1  # エントロピー係数を調整
     reward_signal_steps_per_update: float = attr.ib()
+
+    # use_rs_norm: bool = False
+    # use_residual_blocks: bool = False
+    # post_layer_norm: bool = False
 
     @reward_signal_steps_per_update.default
     def _reward_signal_steps_per_update_default(self):
@@ -54,20 +65,49 @@ class TorchSACOptimizer(TorchOptimizer):
             num_value_outs = max(sum(action_spec.discrete_branches), 1)
             num_action_ins = int(action_spec.continuous_size)
 
-            self.q1_network = ValueNetwork(
+            # self.q1_network = ValueNetwork(
+            #     stream_names,
+            #     observation_specs,
+            #     network_settings,
+            #     num_action_ins,
+            #     num_value_outs,
+            # )
+            # self.q2_network = ValueNetwork(
+            #     stream_names,
+            #     observation_specs,
+            #     network_settings,
+            #     num_action_ins,
+            #     num_value_outs,
+            # )
+            self.q1_network = SimBaCritic(
                 stream_names,
                 observation_specs,
                 network_settings,
                 num_action_ins,
                 num_value_outs,
             )
-            self.q2_network = ValueNetwork(
+            self.q2_network = SimBaCritic(
                 stream_names,
                 observation_specs,
                 network_settings,
                 num_action_ins,
                 num_value_outs,
             )
+
+            # self.q1_network = SimBaNetwork(
+            #     input_size=num_action_ins + sum(obs.shape[0] for obs in observation_specs),
+            #     output_size=num_value_outs,
+            #     hidden_size=network_settings.hidden_units,
+            #     use_rs_norm=True,
+            #     use_residual_blocks=True
+            # )
+            # self.q2_network = SimBaNetwork(
+            #     input_size=num_action_ins + sum(obs.shape[0] for obs in observation_specs),
+            #     output_size=num_value_outs,
+            #     hidden_size=network_settings.hidden_units,
+            #     use_rs_norm=True,
+            #     use_residual_blocks=True
+            # )
 
         def forward(
             self,
@@ -129,7 +169,12 @@ class TorchSACOptimizer(TorchOptimizer):
         reward_signal_names = [key.value for key, _ in reward_signal_configs.items()]
         if isinstance(policy.actor, SharedActorCritic):
             raise UnityTrainerException("SAC does not support SharedActorCritic")
-        self._critic = ValueNetwork(
+        # self._critic = ValueNetwork(
+        #     reward_signal_names,
+        #     policy.behavior_spec.observation_specs,
+        #     policy.network_settings,
+        # )
+        self._critic = SimBaCritic(
             reward_signal_names,
             policy.behavior_spec.observation_specs,
             policy.network_settings,
@@ -167,7 +212,12 @@ class TorchSACOptimizer(TorchOptimizer):
             self._action_spec,
         )
 
-        self.target_network = ValueNetwork(
+        # self.target_network = ValueNetwork(
+        #     self.stream_names,
+        #     self.policy.behavior_spec.observation_specs,
+        #     policy_network_settings,
+        # )
+        self.target_network = SimBaCritic(
             self.stream_names,
             self.policy.behavior_spec.observation_specs,
             policy_network_settings,

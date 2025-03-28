@@ -72,9 +72,19 @@ public class SoccerEnvController : MonoBehaviour
         ResetScene();
     }
 
+    // void OnTriggerEnter(Collider other)
+    // {
+    //     if (other.CompareTag("wall"))
+    //     {
+    //         Debug.Log("ボールが壁に接触しました。リセットします。");
+    //         ResetScene();
+    //     }
+    // }
+
+
     void FixedUpdate()
     {
-        m_ResetTimer += 1;
+        // 通常のリセット処理（エピソード終了時）
         if (m_ResetTimer >= MaxEnvironmentSteps && MaxEnvironmentSteps > 0)
         {
             m_BlueAgentGroup.GroupEpisodeInterrupted();
@@ -82,6 +92,7 @@ public class SoccerEnvController : MonoBehaviour
             ResetScene();
         }
     }
+
 
 
     public void ResetBall()

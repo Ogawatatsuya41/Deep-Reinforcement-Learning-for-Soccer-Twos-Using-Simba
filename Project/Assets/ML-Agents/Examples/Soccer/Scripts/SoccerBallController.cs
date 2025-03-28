@@ -24,4 +24,13 @@ public class SoccerBallController : MonoBehaviour
             envController.GoalTouched(Team.Purple);
         }
     }
+    // void OnTriggerEnter(Collider other)
+    // {
+    //     // ボールが壁に当たった場合の処理
+    //     if (other.CompareTag("wall"))
+    //     {
+    //         Debug.Log("ボールが壁に当たりました（Trigger）。リセットします。");
+    //         envController.ResetScene();
+    //     }
+    // }
 }
