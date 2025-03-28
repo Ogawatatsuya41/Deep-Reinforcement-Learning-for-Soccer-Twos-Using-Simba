@@ -29,10 +29,10 @@ SIMBA introduces simplicity bias to neural networks and includes:
 ## Demonstration Videos
 
 ### PPO vs PPO_SIMBA
-[Watch Video](videos/ppo_pposimba.mov)
+[Watch Video](../videos/ppo_pposimba.mov)
 
 ### SAC vs SAC_SIMBA
-[Watch Video](videos/sac_sacsimba.mov)
+[Watch Video](../videos/sac_sacsimba.mov)
 
 ## Setup and Usage
 
